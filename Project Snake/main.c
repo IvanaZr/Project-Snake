@@ -3,6 +3,9 @@
 #include "menu.h"
 
 int main() {
+
+    loadPlayerDataFile();
+    
     MENU_OPTION choice;
     while (1) {
         choice = showMainMenu();
