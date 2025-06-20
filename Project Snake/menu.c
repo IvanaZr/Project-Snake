@@ -5,7 +5,7 @@
 #include "file_manager.h"
 
 
-char g_playerDataFile[128] = "players.txt";
+char g_playerDataFile[21] = "players.txt";
 #define CONFIG_FILE "config.txt"
 
 // Loads filename from config.txt, or uses default if not found
