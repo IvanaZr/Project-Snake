@@ -2,8 +2,6 @@
 #define MENU_H
 
 #define MAX_NAME_LEN 20
-#define MAX_SCORE(a, b) ((a) > (b) ? (a) : (b))
-
 #include "snake.h" 
 
 typedef enum {
