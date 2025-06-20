@@ -7,7 +7,6 @@
 #include <conio.h>
 #include <ctype.h>
 #include <windows.h>
-#include <process.h>
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
