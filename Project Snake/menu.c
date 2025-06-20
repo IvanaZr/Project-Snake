@@ -3,9 +3,36 @@
 #include "menu.h"
 #include "snake.h"
 #include "file_manager.h"
-#include <ctype.h>
 
-const char* SNAKE_DATA_FILE = "players.txt";
+
+char g_playerDataFile[128] = "players.txt";
+#define CONFIG_FILE "config.txt"
+
+// Loads filename from config.txt, or uses default if not found
+void loadPlayerDataFile() {
+    FILE* fp = fopen(CONFIG_FILE, "r");
+    if (fp) {
+        if (fgets(g_playerDataFile, sizeof(g_playerDataFile), fp)) {
+            // Remove newline
+            g_playerDataFile[strcspn(g_playerDataFile, "\n")] = '\0';
+        }
+        fclose(fp);
+    }
+    else {
+        // If no config file, use default
+        strncpy(g_playerDataFile, "players.txt", sizeof(g_playerDataFile));
+        g_playerDataFile[sizeof(g_playerDataFile) - 1] = '\0';
+    }
+}
+
+// Saves current player data file name to config.txt
+void savePlayerDataFile() {
+    FILE* fp = fopen(CONFIG_FILE, "w");
+    if (fp) {
+        fprintf(fp, "%s\n", g_playerDataFile);
+        fclose(fp);
+    }
+}
 
 // Checking duplicate nicknames
 int nicknameExists(const char* nickname, RECORD_LIST* list) {
@@ -79,7 +106,7 @@ MENU_OPTION showMainMenu() {
 int handleMainMenu(MENU_OPTION opt) {
     switch (opt) {
     case MENU_OPTION_PLAY: {
-        RECORD_LIST list = fmReadAll(SNAKE_DATA_FILE);
+        RECORD_LIST list = fmReadAll(g_playerDataFile);
         PLAYER_RECORD rec;
         int duplicate;
         do {
@@ -101,7 +128,7 @@ int handleMainMenu(MENU_OPTION opt) {
         rec.snakeLook = snakeLook;
         printf("You scored: %u\n", rec.score);
 
-        if (fmCreate(SNAKE_DATA_FILE, &rec))
+        if (fmCreate(g_playerDataFile, &rec))
             printf("New record created for %s with score %u.\n", rec.name, rec.score);
         else
             printf("Failed to create new record.\n");
@@ -155,10 +182,11 @@ RECORDS_OPTION showRecordsMenu() {
     printf("4) Search Player By Name\n");
     printf("5) Search Player By Score\n");
     printf("6) Rename Player\n");
-    printf("7) Back to Main Menu\n");
+    printf("7) Rename Player Data File\n");
+    printf("8) Back to Main Menu\n");
     printf("Select: ");
-    while (scanf("%d", &sel) != 1 || sel < 1 || sel > 7) {
-        printf("Please enter a valid number (1-7): ");
+    while (scanf("%d", &sel) != 1 || sel < 1 || sel > 8) {
+        printf("Please enter a valid number (1-8): ");
         while (getchar() != '\n');
     }
     while (getchar() != '\n');
@@ -173,10 +201,10 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
     switch (opt) {
     case RECORDS_OPTION_LIST:
         system("cls");
-        list = fmReadAll(SNAKE_DATA_FILE);
+        list = fmReadAll(g_playerDataFile);
 
         // File size demo (fseek/ftell/rewind)
-        FILE* fp = fopen(SNAKE_DATA_FILE, "r");
+        FILE* fp = fopen(g_playerDataFile, "r");
         if (fp) {
             fseek(fp, 0, SEEK_END);
             long size = ftell(fp);
@@ -211,7 +239,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         break;
 
     case RECORDS_OPTION_UPDATE:
-        list = fmReadAll(SNAKE_DATA_FILE);
+        list = fmReadAll(g_playerDataFile);
         if (list.count == 0) {
             system("cls");
             printf("No player records to update.\n");
@@ -256,7 +284,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
             strncpy(rec.name, list.records[idx - 1].name, MAX_NAME_LEN);
             rec.score = score;
             rec.snakeLook = list.records[idx - 1].snakeLook;
-            if (fmUpdate(SNAKE_DATA_FILE, &rec))
+            if (fmUpdate(g_playerDataFile, &rec))
                 printf("High score updated for %s to %u!\n", rec.name, rec.score);
             else
                 printf("Failed to update record.\n");
@@ -270,7 +298,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         break;
 
     case RECORDS_OPTION_DELETE:
-        list = fmReadAll(SNAKE_DATA_FILE);
+        list = fmReadAll(g_playerDataFile);
         if (list.count == 0) {
             system("cls");
             printf("No player records to delete.\n");
@@ -303,7 +331,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
             getchar();
             break;
         }
-        
+
         printf("Are you sure you want to delete player '%s'? (y/n): ",
             list.records[delIdx - 1].name);
         char confirm = getchar();
@@ -315,7 +343,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
             break;
         }
 
-        if (fmDelete(SNAKE_DATA_FILE, list.records[delIdx - 1].name))
+        if (fmDelete(g_playerDataFile, list.records[delIdx - 1].name))
             printf("Record for %s deleted.\n", list.records[delIdx - 1].name);
         else
             printf("Record not found.\n");
@@ -325,7 +353,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         break;
 
     case RECORDS_OPTION_SEARCH_NAME:
-        list = fmReadAll(SNAKE_DATA_FILE);
+        list = fmReadAll(g_playerDataFile);
         if (list.count == 0) {
             printf("No player records to search.\n");
             fmFreeList(&list);
@@ -356,7 +384,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         break;
 
     case RECORDS_OPTION_SEARCH_SCORE:
-        list = fmReadAll(SNAKE_DATA_FILE);
+        list = fmReadAll(g_playerDataFile);
         if (list.count == 0) {
             printf("No player records to search.\n");
             fmFreeList(&list);
@@ -379,7 +407,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
                 break;
             }
         }
-        if (!valid || strlen(scoreBuf) == 1) { 
+        if (!valid || strlen(scoreBuf) == 1) {
             printf("Invalid score input.\n");
             fmFreeList(&list);
             printf("\nPress ESC to return.");
@@ -402,9 +430,8 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         while (_getch() != 27);
         break;
 
-
     case RECORDS_OPTION_RENAME_PLAYER: {
-        RECORD_LIST list = fmReadAll(SNAKE_DATA_FILE);
+        RECORD_LIST list = fmReadAll(g_playerDataFile);
         if (list.count == 0) {
             system("cls");
             printf("No player records to rename.\n");
@@ -456,7 +483,7 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         // Apply rename
         strncpy(list.records[idx - 1].name, newName, MAX_NAME_LEN);
         // Write all records back
-        FILE* fp = fopen(SNAKE_DATA_FILE, "w");
+        FILE* fp = fopen(g_playerDataFile, "w");
         if (!fp) {
             perror("fopen");
             fmFreeList(&list);
@@ -475,8 +502,40 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         break;
     }
 
+    case RECORDS_OPTION_FILE_RENAME: {
+        char newFileName[21];
+        printf("Current player data file is '%s'.\n", g_playerDataFile);
+        printf("Enter new filename to rename it to (max 20 chars): ");
+        if (fgets(newFileName, sizeof(newFileName), stdin)) {
+            newFileName[strcspn(newFileName, "\n")] = '\0';
+        }
+        else {
+            printf("Invalid input.\nPress any key to return...");
+            getchar();
+            break;
+        }
+        if (strlen(newFileName) == 0) {
+            printf("New filename cannot be empty.\nPress any key to return...");
+            getchar();
+            break;
+        }
+        if (rename(g_playerDataFile, newFileName) == 0) {
+            printf("Player data file successfully renamed to '%s'.\n", newFileName);
+            strncpy(g_playerDataFile, newFileName, sizeof(g_playerDataFile));
+            g_playerDataFile[sizeof(g_playerDataFile) - 1] = '\0';
+            savePlayerDataFile(); 
+        }
+        else {
+            perror("Failed to rename player data file");
+        }
+
+        printf("Press any key to return...");
+        getchar();
+        break;
+    }
     case RECORDS_OPTION_BACK:
     default:
         break;
     }
 }
+
