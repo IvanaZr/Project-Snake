@@ -40,5 +40,7 @@ void handleRecordsMenu(RECORDS_OPTION opt);
 int nicknameExists(const char* nickname, RECORD_LIST* list);
 int compareScores(const void* a, const void* b);
 int menuSnakeLook();
+void loadPlayerDataFile(void);
+void savePlayerDataFile(void);
 
 #endif // MENU_H
