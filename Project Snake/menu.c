@@ -5,7 +5,7 @@
 #include "file_manager.h"
 
 
-char g_playerDataFile[21] = "players.txt";
+char g_playerDataFile[128] = "players.txt";
 #define CONFIG_FILE "config.txt"
 
 // Loads filename from config.txt, or uses default if not found
@@ -232,6 +232,15 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
                     list.records[i].score,
                     snakeLookStr[list.records[i].snakeLook]);
             }
+            if (list.count > 0) {
+                // Minimum score using minScore inline function
+                uint32_t min_score = list.records[0].score;
+                for (size_t i = 1; i < list.count; ++i) {
+                    min_score = minScore(min_score, list.records[i].score);
+                }
+                printf("Minimum score among all players: %u\n", min_score);
+            }
+
         }
         fmFreeList(&list);
         printf("\nPress ESC to return.");
@@ -538,4 +547,3 @@ void handleRecordsMenu(RECORDS_OPTION opt) {
         break;
     }
 }
-
