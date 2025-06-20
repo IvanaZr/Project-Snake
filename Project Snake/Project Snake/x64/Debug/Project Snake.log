@@ -1,0 +1,3 @@
+﻿  menu.c
+C:\Users\Ivana\source\repos\Project Snake\menu.c(100,21): warning C4013: 'snake' undefined; assuming extern returning int
+  Project Snake.vcxproj -> C:\Users\Ivana\source\repos\Project Snake\x64\Debug\Project Snake.exe
